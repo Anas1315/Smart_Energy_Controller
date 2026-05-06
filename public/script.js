@@ -1,5 +1,19 @@
 // Socket connection
-const socket = io();
+const socket = io({ path: '/socket.io', transports: ['websocket', 'polling'] });
+
+socket.on('connect', () => {
+    console.log('Socket.IO connected:', socket.id);
+});
+
+socket.on('connect_error', (err) => {
+    console.error('Socket.IO connect_error:', err.message || err);
+    showToast('Socket connection failed', true);
+});
+
+socket.on('disconnect', (reason) => {
+    console.warn('Socket.IO disconnected:', reason);
+    showToast('Socket disconnected', true);
+});
 
 // Chart instances
 let powerChart, voltageCurrentChart, wapdaChart;
