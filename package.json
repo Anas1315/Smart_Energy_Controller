@@ -1,0 +1,21 @@
+{
+  "name": "smart-energy-dashboard",
+  "version": "1.0.0",
+  "description": "ESP32 Smart Energy Controller Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
+    "express-rate-limit": "^6.10.0",
+    "serialport": "^12.0.0",
+    "socket.io": "^4.8.3",
+    "sqlite3": "^5.1.7"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

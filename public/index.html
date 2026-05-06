@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Smart Energy Controller | Real-time Monitoring</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2><i>⚡</i> <span>Smart Energy</span></h2>
+            <p><span>Controller v2.1</span></p>
+        </div>
+        <nav class="nav-menu">
+            <div class="nav-item active" data-page="dashboard">
+                <i>📊</i> <span>Dashboard</span>
+            </div>
+            <div class="nav-item" data-page="control">
+                <i>🎮</i> <span>Control Panel</span>
+            </div>
+            <div class="nav-item" data-page="analytics">
+                <i>📈</i> <span>Analytics</span>
+            </div>
+            <div class="nav-item" data-page="logs">
+                <i>📋</i> <span>Activity Logs</span>
+            </div>
+        </nav>
+        <div class="connection-status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page active">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Real-time status overview of your energy system</p>
+            </div>
+            
+            <div class="schedule-bar">
+                <div class="time-info">
+                    <div class="time-display" id="currentTime">--:-- --</div>
+                    <div class="period-badge" id="periodBadge">---</div>
+                </div>
+                <div class="info-text">🌞 Day: 8AM–6PM &nbsp;|&nbsp; 🌙 Night: 6PM–8AM</div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">📊</div>
+                    <div class="value" id="voltage">0</div>
+                    <div class="label">Voltage (V)</div>
+                    <div class="trend" id="voltageTrend">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">⚡</div>
+                    <div class="value" id="current">0</div>
+                    <div class="label">Current (A)</div>
+                    <div class="trend" id="currentTrend">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">💪</div>
+                    <div class="value" id="power">0</div>
+                    <div class="label">Power (W)</div>
+                    <div class="trend" id="powerTrend">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon" id="ldrStatIcon">🌤️</div>
+                    <div class="value" id="ldrDisplay">0</div>
+                    <div class="label">LDR Reading</div>
+                    <div class="trend" id="ldrCondition">--</div>
+                </div>
+            </div>
+            
+            <div class="relay-grid">
+                <div class="relay-card">
+                    <div class="relay-header">
+                        <div class="relay-title">
+                            <i>🏭</i>
+                            <h3>Heavy Load</h3>
+                        </div>
+                        <span class="relay-status-badge" id="heavyLoadStatusBadge">OFF</span>
+                    </div>
+                    <div class="relay-stats">
+                        <div class="stat-item">
+                            <div class="label">Current State</div>
+                            <div class="value" id="heavyLoadState">OFF</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Control Mode</div>
+                            <div class="value" id="heavyLoadMode">Auto</div>
+                        </div>
+                    </div>
+                    <div class="mode-indicator">
+                        📋 Auto: Day = ON &nbsp;|&nbsp; Night = Follow WAPDA
+                    </div>
+                </div>
+                
+                <div class="relay-card">
+                    <div class="relay-header">
+                        <div class="relay-title">
+                            <i>🔌</i>
+                            <h3>Grid Power (WAPDA)</h3>
+                        </div>
+                        <span class="relay-status-badge" id="wapdaStatusBadge">OFF</span>
+                    </div>
+                    <div class="relay-stats">
+                        <div class="stat-item">
+                            <div class="label">Grid Available</div>
+                            <div class="value" id="wapdaAvailable">--</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="label">Control Mode</div>
+                            <div class="value" id="wapdaMode">Auto</div>
+                        </div>
+                    </div>
+                    <div class="mode-indicator">
+                        📋 Auto: Day = OFF (or ON if cloudy) &nbsp;|&nbsp; Night = ON
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ldr-card">
+                <h3>🌤️ Light Sensor (LDR)</h3>
+                <div class="ldr-visual">
+                    <div class="ldr-meter">
+                        <div class="ldr-value-large" id="ldrValue">0</div>
+                        <div class="ldr-label">Raw ADC Value (0–4095)</div>
+                    </div>
+                    <div class="ldr-icon" id="ldrIcon">🌤️</div>
+                    <div class="ldr-meter">
+                        <div class="ldr-value-large" id="sunlightStatus">--</div>
+                        <div class="ldr-label">Condition</div>
+                    </div>
+                </div>
+                <div class="ldr-bar-container">
+                    <div class="ldr-bar-labels">
+                        <span>☀️ Full Sun (0)</span>
+                        <span id="ldrBarPct">0%</span>
+                        <span>🌑 Dark (4095)</span>
+                    </div>
+                    <div class="ldr-bar-wrap">
+                        <div class="ldr-bar" id="ldrBar" style="width:0%;"></div>
+                    </div>
+                </div>
+                <div class="info-note">
+                    ℹ️ LDR is inverted: <strong>Low value = Bright sunlight</strong> | <strong>High value = Dark/Cloudy</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Page -->
+        <div id="control-page" class="page">
+            <div class="page-header">
+                <h1>Control Panel</h1>
+                <p>Manual control of relays and LDR settings</p>
+            </div>
+            
+            <div class="relay-grid">
+                <div class="relay-card">
+                    <div class="relay-header">
+                        <div class="relay-title">
+                            <i>🏭</i>
+                            <h3>Heavy Load Control</h3>
+                        </div>
+                        <span class="relay-status-badge" id="ctrlHeavyLoadStatus">OFF</span>
+                    </div>
+                    <p class="warning-text">⚠️ Manual ON/OFF works only when mode is set to <strong>Manual</strong></p>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="btnHL_on">Turn ON</button>
+                        <button class="btn btn-danger" id="btnHL_off">Turn OFF</button>
+                        <button class="btn btn-info" id="btnHL_auto">Auto Mode</button>
+                        <button class="btn btn-warning" id="btnHL_manual">Manual Mode</button>
+                    </div>
+                    <div class="mode-indicator">
+                        Current Mode: <strong id="ctrlHeavyLoadMode">Auto</strong>
+                    </div>
+                </div>
+                
+                <div class="relay-card">
+                    <div class="relay-header">
+                        <div class="relay-title">
+                            <i>🔌</i>
+                            <h3>Grid Power (WAPDA) Control</h3>
+                        </div>
+                        <span class="relay-status-badge" id="ctrlWapdaStatus">OFF</span>
+                    </div>
+                    <p class="warning-text">⚠️ Manual ON/OFF works only when mode is set to <strong>Manual</strong></p>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="btnW_on">Turn ON</button>
+                        <button class="btn btn-danger" id="btnW_off">Turn OFF</button>
+                        <button class="btn btn-info" id="btnW_auto">Auto Mode</button>
+                        <button class="btn btn-warning" id="btnW_manual">Manual Mode</button>
+                    </div>
+                    <div class="mode-indicator">
+                        Current Mode: <strong id="ctrlWapdaMode">Auto</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ldr-card">
+                <h3>🌤️ LDR Sensor Configuration</h3>
+                <div class="ldr-visual">
+                    <div class="ldr-meter">
+                        <div class="ldr-value-large" id="ldrValueCtrl">0</div>
+                        <div class="ldr-label">Current ADC Reading</div>
+                    </div>
+                    <div class="ldr-meter">
+                        <div class="ldr-value-large" id="ldrCondCtrl">--</div>
+                        <div class="ldr-label">Current Condition</div>
+                    </div>
+                </div>
+                
+                <div class="threshold-controls">
+                    <div class="threshold-item">
+                        <label>☀️ Sunny Threshold — below this = SUNNY: 
+                            <span id="sunThresholdVal" class="threshold-value">800</span>
+                        </label>
+                        <input type="range" id="sunThreshold" min="100" max="2000" value="800">
+                        <div class="range-labels">
+                            <span>100 (Very sensitive)</span>
+                            <span>2000 (Less sensitive)</span>
+                        </div>
+                    </div>
+                    <div class="threshold-item">
+                        <label>🌙 Dark Threshold — above this = DARK: 
+                            <span id="darkThresholdVal" class="threshold-value">1200</span>
+                        </label>
+                        <input type="range" id="darkThreshold" min="600" max="3000" value="1200">
+                        <div class="range-labels">
+                            <span>600 (Less sensitive)</span>
+                            <span>3000 (Very sensitive)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="deadband-info">
+                    ℹ️ Dead band between Sunny (&lt; <span id="sunBandNote">800</span>) and Dark (&gt; <span id="darkBandNote">1200</span>) — prevents flickering.
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-info" id="btnLDR_enable">Enable LDR Control</button>
+                    <button class="btn btn-warning" id="btnLDR_disable">Disable LDR Control</button>
+                    <button class="btn btn-primary" id="btnLDR_apply">Apply Settings</button>
+                </div>
+                
+                <div class="mode-indicator">
+                    LDR Control: <strong id="ldrEnabledStatus">Enabled ✅</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics-page" class="page">
+            <div class="page-header">
+                <h1>Analytics</h1>
+                <p>Historical data and power consumption trends</p>
+            </div>
+            
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="value" id="avgVoltage">0 V</div>
+                    <div class="label">Avg Voltage (24h)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="avgCurrent">0 A</div>
+                    <div class="label">Avg Current (24h)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="avgPower">0 W</div>
+                    <div class="label">Avg Power (24h)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="value" id="totalEnergy">0 kWh</div>
+                    <div class="label">Total Energy (24h)</div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>📈 Power Consumption Trend</h3>
+                    <select id="timeRange" class="time-select">
+                        <option value="6">Last 6 Hours</option>
+                        <option value="12">Last 12 Hours</option>
+                        <option value="24" selected>Last 24 Hours</option>
+                        <option value="48">Last 48 Hours</option>
+                    </select>
+                </div>
+                <canvas id="powerChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>📊 Voltage & Current Trend</h3>
+                </div>
+                <canvas id="voltageCurrentChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3>⚡ Grid Power (WAPDA) Availability</h3>
+                </div>
+                <canvas id="wapdaChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Logs Page -->
+        <div id="logs-page" class="page">
+            <div class="page-header">
+                <h1>Activity Logs</h1>
+                <p>History of relay operations and system events</p>
+            </div>
+            <div class="logs-container">
+                <table class="logs-table">
+                    <thead>
+                        <tr><th>Timestamp</th><th>Relay</th><th>Action</th><th>Source</th><th>Mode</th></tr>
+                    </thead>
+                    <tbody id="logsBody">
+                        <tr><td colspan="5">Loading logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "ldr_sunlight_threshold": "2500",
+  "ldr_dark_threshold": "800",
+  "day_start_hour": "8",
+  "day_end_hour": "18"
+}
