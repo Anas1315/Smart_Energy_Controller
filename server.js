@@ -227,7 +227,7 @@ io.on('connection', (socket) => {
 
 // ==================== START SERVER ====================
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n╔════════════════════════════════════════╗`);
   console.log(`║   Smart Energy Dashboard v2.1        ║`);
