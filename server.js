@@ -13,10 +13,17 @@ const io = socketIo(server, {
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Database setup
-const db = new sqlite3.Database('./database.sqlite');
+const dbPath = path.join(__dirname, 'database.sqlite');
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error('Failed to open database:', err.message);
+  } else {
+    console.log('Database opened at', dbPath);
+  }
+});
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS sensor_data (
@@ -104,6 +111,8 @@ app.get('/api/esp32/commands', (req, res) => {
 });
 
 // ==================== WEB CLIENT ENDPOINTS ====================
+
+app.get('/health', (req, res) => res.send('OK'));
 
 app.get('/api/status', (req, res) => res.json(currentStatus));
 
