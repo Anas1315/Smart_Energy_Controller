@@ -3,7 +3,6 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 const path = require("path");
-const axios = require("axios");
 require("dotenv").config();
 
 const app = express();
@@ -13,7 +12,6 @@ const io = socketIo(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
-  transports: ["websocket", "polling"],
 });
 
 // Middleware
@@ -44,55 +42,64 @@ let latestData = {
 // Store command queue
 let commandQueue = [];
 
-// ESP32 endpoints (your deployed ESP32 API)
-const ESP32_API_BASE =
-  process.env.ESP32_API_URL ||
-  "https://smart-energy-controller-knb7.onrender.com";
+// ===== ESP32 ENDPOINTS (ADD THESE) =====
 
-// API Routes for ESP32
+// ESP32 sends status updates (relay states, modes)
 app.post("/api/esp32/status", (req, res) => {
-  console.log("[ESP32] Status update received at:", new Date().toISOString());
+  console.log("[ESP32] Status update received:", req.body);
   latestData = { ...latestData, ...req.body, timestamp: Date.now() };
   io.emit("data_update", latestData);
   res.json({ success: true, message: "Status updated" });
 });
 
-app.get("/api/esp32/commands", (req, res) => {
-  const commands = [...commandQueue];
-  commandQueue = [];
-  console.log(`[ESP32] Sending ${commands.length} commands`);
-  res.json({ commands });
-});
-
+// ESP32 sends sensor data (voltage, current, LDR)
 app.post("/api/esp32/data", (req, res) => {
   console.log("[ESP32] Sensor data received:", req.body);
-  latestData = { ...latestData, ...req.body };
+  latestData = { ...latestData, ...req.body, timestamp: Date.now() };
   io.emit("sensor_update", req.body);
   res.json({ success: true, message: "Data received" });
 });
 
-// Web interface API endpoints
+// ESP32 checks for commands
+app.get("/api/esp32/commands", (req, res) => {
+  const commands = [...commandQueue];
+  commandQueue = [];
+  console.log(`[ESP32] Sending ${commands.length} commands`);
+  res.json({ commands: commands });
+});
+
+// ===== WEB INTERFACE ENDPOINTS =====
+
+// Get current status for web dashboard
 app.get("/api/status", (req, res) => {
   res.json(latestData);
 });
 
+// Send command from web to ESP32
 app.post("/api/command", (req, res) => {
   const { type, value } = req.body;
   commandQueue.push({ type, value });
   console.log(`[WEB] Command added: ${type} = ${value}`);
-
-  // Forward command to ESP32 if needed
   io.emit("command_sent", { type, value });
-
   res.json({ success: true, message: "Command sent successfully" });
 });
 
-// Serve main page
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// Historical data for chart
+app.get("/api/history", (req, res) => {
+  const history = [];
+  for (let i = 0; i < 24; i++) {
+    history.push({
+      hour: i,
+      voltage: 210 + Math.random() * 20,
+      current: Math.random() * 15,
+      power: Math.random() * 3000,
+      ldrValue: 500 + Math.random() * 3000,
+    });
+  }
+  res.json(history);
 });
 
-// Health check endpoint for Render
+// Health check
 app.get("/health", (req, res) => {
   res.status(200).json({
     status: "healthy",
@@ -101,63 +108,29 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Generate historical data endpoint
-app.get("/api/history", (req, res) => {
-  // Generate realistic historical data
-  const history = [];
-  const now = new Date();
-  const currentHour = now.getHours();
-
-  for (let i = 0; i < 24; i++) {
-    const hour = (currentHour - 23 + i + 24) % 24;
-    // Simulate solar production pattern
-    let solarFactor = 0;
-    if (hour >= 6 && hour <= 18) {
-      solarFactor = Math.sin((Math.PI * (hour - 6)) / 12);
-    }
-
-    history.push({
-      hour: hour,
-      voltage: 210 + Math.random() * 15,
-      current: solarFactor * 10 + Math.random() * 3,
-      power: solarFactor * 2200 + Math.random() * 500,
-      ldrValue: solarFactor * 3000 + 500,
-    });
-  }
-  res.json(history);
+// Serve main page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Socket.io connection
 io.on("connection", (socket) => {
-  console.log("[Socket] New client connected from:", socket.handshake.address);
-
-  // Send current data immediately
+  console.log("[Socket] Client connected");
   socket.emit("data_update", latestData);
-
   socket.on("disconnect", () => {
     console.log("[Socket] Client disconnected");
   });
 });
 
-// Error handling
-process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
-});
-
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
-});
-
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`╔════════════════════════════════════════════════╗`);
-  console.log(`║     SMART ENERGY CONTROLLER WEB SERVER        ║`);
-  console.log(`║     Version: 3.0 - Render Deploy Ready        ║`);
-  console.log(`╠════════════════════════════════════════════════╣`);
-  console.log(`║  Server running on: http://0.0.0.0:${PORT}      ║`);
-  console.log(`║  Web interface: http://localhost:${PORT}        ║`);
-  console.log(`║  API endpoint: http://localhost:${PORT}/api     ║`);
-  console.log(`║  Health check: http://localhost:${PORT}/health  ║`);
-  console.log(`╚════════════════════════════════════════════════╝`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`ESP32 endpoints:`);
+  console.log(`  POST /api/esp32/status`);
+  console.log(`  POST /api/esp32/data`);
+  console.log(`  GET  /api/esp32/commands`);
+  console.log(`Web endpoints:`);
+  console.log(`  GET  /api/status`);
+  console.log(`  POST /api/command`);
 });
