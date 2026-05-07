@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Smart Energy Controller - Solar Power Management System</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <div class="logo-text">
+                        <h1>Smart Energy Controller</h1>
+                        <p>Solar Power Management System</p>
+                    </div>
+                </div>
+                <div class="header-status">
+                    <div class="connection-status" id="connectionStatus">
+                        <span class="status-dot"></span>
+                        <span>Connected</span>
+                    </div>
+                    <div class="timestamp" id="timestamp">--:--:--</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <main class="main-grid">
+            <!-- Energy Metrics -->
+            <div class="card metrics-card">
+                <div class="card-header">
+                    <h2>⚡ Energy Metrics</h2>
+                    <span class="card-subtitle">Real-time readings</span>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric">
+                        <div class="metric-icon">📊</div>
+                        <div class="metric-info">
+                            <span class="metric-label">Voltage</span>
+                            <span class="metric-value" id="voltage">0.0</span>
+                            <span class="metric-unit">V</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-icon">🔌</div>
+                        <div class="metric-info">
+                            <span class="metric-label">Current</span>
+                            <span class="metric-value" id="current">0.00</span>
+                            <span class="metric-unit">A</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-icon">💪</div>
+                        <div class="metric-info">
+                            <span class="metric-label">Power</span>
+                            <span class="metric-value" id="power">0.0</span>
+                            <span class="metric-unit">W</span>
+                        </div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-icon">☀️</div>
+                        <div class="metric-info">
+                            <span class="metric-label">LDR Sensor</span>
+                            <span class="metric-value" id="ldrValue">0</span>
+                            <span class="metric-unit">lux</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card status-card">
+                <div class="card-header">
+                    <h2>🔧 System Status</h2>
+                    <span class="card-subtitle">Current conditions</span>
+                </div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">WAPDA Power</span>
+                        <span class="status-badge" id="wapdaStatus">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Time of Day</span>
+                        <span class="status-badge" id="timeStatus">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Light Condition</span>
+                        <span class="status-badge" id="lightStatus">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">System Time</span>
+                        <span class="status-value" id="systemTime">--:--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relay Control Panel -->
+            <div class="card control-card">
+                <div class="card-header">
+                    <h2>🎮 Relay Control</h2>
+                    <span class="card-subtitle">Manual & Auto modes</span>
+                </div>
+                <div class="controls">
+                    <!-- WAPDA Relay -->
+                    <div class="control-group">
+                        <div class="control-header">
+                            <span class="control-title">WAPDA Relay</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="wapdaModeToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="control-body">
+                            <button id="wapdaOnBtn" class="btn btn-primary" disabled>Turn ON</button>
+                            <button id="wapdaOffBtn" class="btn btn-secondary" disabled>Turn OFF</button>
+                            <span class="control-status" id="wapdaRelayStatus">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Heavy Load Relay -->
+                    <div class="control-group">
+                        <div class="control-header">
+                            <span class="control-title">Heavy Load Relay</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="heavyModeToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="control-body">
+                            <button id="heavyOnBtn" class="btn btn-primary" disabled>Turn ON</button>
+                            <button id="heavyOffBtn" class="btn btn-secondary" disabled>Turn OFF</button>
+                            <span class="control-status" id="heavyRelayStatus">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LDR Settings -->
+            <div class="card ldr-card">
+                <div class="card-header">
+                    <h2>🌞 Light Sensor Settings</h2>
+                    <span class="card-subtitle">Configure LDR thresholds</span>
+                </div>
+                <div class="ldr-controls">
+                    <div class="ldr-toggle">
+                        <span>Enable LDR Control</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="ldrEnableToggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="threshold-control">
+                        <div class="threshold-item">
+                            <label>Sunny/Bright Threshold</label>
+                            <input type="range" id="sunThreshold" min="0" max="4095" value="1500">
+                            <span class="threshold-value" id="sunThresholdValue">1500</span>
+                        </div>
+                        <div class="threshold-item">
+                            <label>Dark/Cloudy Threshold</label>
+                            <input type="range" id="darkThreshold" min="0" max="4095" value="800">
+                            <span class="threshold-value" id="darkThresholdValue">800</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Energy Chart -->
+            <div class="card chart-card">
+                <div class="card-header">
+                    <h2>📈 Energy History</h2>
+                    <span class="card-subtitle">Last 24 hours</span>
+                </div>
+                <canvas id="energyChart"></canvas>
+            </div>
+
+            <!-- System Info -->
+            <div class="card info-card">
+                <div class="card-header">
+                    <h2>ℹ️ System Information</h2>
+                    <span class="card-subtitle">Operational details</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Operation Mode</span>
+                        <span class="info-value" id="operationMode">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Power Efficiency</span>
+                        <span class="info-value" id="efficiency">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Daily Energy</span>
+                        <span class="info-value" id="dailyEnergy">--</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">System Status</span>
+                        <span class="info-value" id="systemStatus">Operational</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Smart Energy Controller v3.0 | Real-time Solar Power Management</p>
+        </footer>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
