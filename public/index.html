@@ -2,217 +2,435 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Smart Energy Controller - Solar Power Management System</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Energy Controller | Intelligent Power Management</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="/socket.io/socket.io.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
+    <div class="app">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
                 <div class="logo">
-                    <div class="logo-icon">⚡</div>
-                    <div class="logo-text">
-                        <h1>Smart Energy Controller</h1>
-                        <p>Solar Power Management System</p>
-                    </div>
-                </div>
-                <div class="header-status">
-                    <div class="connection-status" id="connectionStatus">
-                        <span class="status-dot"></span>
-                        <span>Connected</span>
-                    </div>
-                    <div class="timestamp" id="timestamp">--:--:--</div>
+                    <i class="fas fa-solar-panel"></i>
+                    <span>SolarSync</span>
                 </div>
             </div>
-        </header>
-
-        <!-- Main Grid -->
-        <main class="main-grid">
-            <!-- Energy Metrics -->
-            <div class="card metrics-card">
-                <div class="card-header">
-                    <h2>⚡ Energy Metrics</h2>
-                    <span class="card-subtitle">Real-time readings</span>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="controls">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Controls</span>
+                </a>
+                <a href="#" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-page="history">
+                    <i class="fas fa-history"></i>
+                    <span>History</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="status-indicator" id="sidebarStatus">
+                    <div class="status-dot"></div>
+                    <span>Connected</span>
                 </div>
-                <div class="metrics-grid">
-                    <div class="metric">
-                        <div class="metric-icon">📊</div>
-                        <div class="metric-info">
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p id="pageSubtitle">Real-time energy monitoring</p>
+                </div>
+                <div class="top-bar-actions">
+                    <div class="time-display" id="currentTime"></div>
+                    <div class="user-mode-selector" id="userModeDisplay">
+                        <i class="fas fa-home"></i>
+                        <span>Home Mode</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="page active">
+                <!-- Hero Status -->
+                <div class="hero-status-card" id="systemStatusCard">
+                    <div class="hero-icon"><i class="fas fa-sun"></i></div>
+                    <div class="hero-details">
+                        <div class="hero-label">System Status</div>
+                        <div class="hero-value" id="statusMessage">Solar Power Active</div>
+                    </div>
+                    <div class="hero-meta">
+                        <div><i class="fas fa-microchip"></i> <span id="lastSeenText">Online</span></div>
+                        <div><i class="fas fa-chart-line"></i> <span id="efficiencyText">98% Efficient</span></div>
+                    </div>
+                </div>
+
+                <!-- Quick Metrics -->
+                <div class="quick-metrics">
+                    <div class="metric-box">
+                        <i class="fas fa-bolt"></i>
+                        <div class="metric-data">
                             <span class="metric-label">Voltage</span>
-                            <span class="metric-value" id="voltage">0.0</span>
+                            <span class="metric-value" id="dashVoltage">0.0</span>
                             <span class="metric-unit">V</span>
                         </div>
                     </div>
-                    <div class="metric">
-                        <div class="metric-icon">🔌</div>
-                        <div class="metric-info">
+                    <div class="metric-box">
+                        <i class="fas fa-plug"></i>
+                        <div class="metric-data">
                             <span class="metric-label">Current</span>
-                            <span class="metric-value" id="current">0.00</span>
+                            <span class="metric-value" id="dashCurrent">0.00</span>
                             <span class="metric-unit">A</span>
                         </div>
                     </div>
-                    <div class="metric">
-                        <div class="metric-icon">💪</div>
-                        <div class="metric-info">
+                    <div class="metric-box">
+                        <i class="fas fa-charging-station"></i>
+                        <div class="metric-data">
                             <span class="metric-label">Power</span>
-                            <span class="metric-value" id="power">0.0</span>
+                            <span class="metric-value" id="dashPower">0.0</span>
                             <span class="metric-unit">W</span>
                         </div>
                     </div>
-                    <div class="metric">
-                        <div class="metric-icon">☀️</div>
-                        <div class="metric-info">
-                            <span class="metric-label">LDR Sensor</span>
-                            <span class="metric-value" id="ldrValue">0</span>
+                    <div class="metric-box">
+                        <i class="fas fa-sun"></i>
+                        <div class="metric-data">
+                            <span class="metric-label">Solar Intensity</span>
+                            <span class="metric-value" id="dashLdr">0</span>
                             <span class="metric-unit">lux</span>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- System Status -->
-            <div class="card status-card">
-                <div class="card-header">
-                    <h2>🔧 System Status</h2>
-                    <span class="card-subtitle">Current conditions</span>
-                </div>
+                <!-- Status Grid -->
                 <div class="status-grid">
-                    <div class="status-item">
-                        <span class="status-label">WAPDA Power</span>
-                        <span class="status-badge" id="wapdaStatus">--</span>
+                    <div class="info-card">
+                        <i class="fas fa-plug"></i>
+                        <div>
+                            <div class="info-label">Grid Power</div>
+                            <div class="info-value" id="dashWapda">---</div>
+                        </div>
                     </div>
-                    <div class="status-item">
-                        <span class="status-label">Time of Day</span>
-                        <span class="status-badge" id="timeStatus">--</span>
+                    <div class="info-card">
+                        <i class="fas fa-sun"></i>
+                        <div>
+                            <div class="info-label">Solar Condition</div>
+                            <div class="info-value" id="dashLight">---</div>
+                        </div>
                     </div>
-                    <div class="status-item">
-                        <span class="status-label">Light Condition</span>
-                        <span class="status-badge" id="lightStatus">--</span>
+                    <div class="info-card">
+                        <i class="fas fa-clock"></i>
+                        <div>
+                            <div class="info-label">Time Period</div>
+                            <div class="info-value" id="dashTime">---</div>
+                        </div>
                     </div>
-                    <div class="status-item">
-                        <span class="status-label">System Time</span>
-                        <span class="status-value" id="systemTime">--:--</span>
+                    <div class="info-card">
+                        <i class="fas fa-sync-alt"></i>
+                        <div>
+                            <div class="info-label">Last Update</div>
+                            <div class="info-value" id="dashUpdate">Never</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Summary Preview -->
+                <div class="summary-preview">
+                    <div class="section-header">
+                        <h3><i class="fas fa-chart-simple"></i> Today's Summary</h3>
+                    </div>
+                    <div class="preview-stats">
+                        <div class="preview-stat">
+                            <span class="stat-icon">⏱️</span>
+                            <div>
+                                <div class="stat-label">Grid Usage</div>
+                                <div class="stat-number" id="previewWapda">0</div>
+                                <div class="stat-unit">hours</div>
+                            </div>
+                        </div>
+                        <div class="preview-stat">
+                            <span class="stat-icon">🔌</span>
+                            <div>
+                                <div class="stat-label">Load Active</div>
+                                <div class="stat-number" id="previewLoad">0</div>
+                                <div class="stat-unit">hours</div>
+                            </div>
+                        </div>
+                        <div class="preview-stat">
+                            <span class="stat-icon">☀️</span>
+                            <div>
+                                <div class="stat-label">Solar Saved</div>
+                                <div class="stat-number" id="previewSolar">0</div>
+                                <div class="stat-unit">hours</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Relay Control Panel -->
-            <div class="card control-card">
-                <div class="card-header">
-                    <h2>🎮 Relay Control</h2>
-                    <span class="card-subtitle">Manual & Auto modes</span>
-                </div>
-                <div class="controls">
-                    <!-- WAPDA Relay -->
-                    <div class="control-group">
-                        <div class="control-header">
-                            <span class="control-title">WAPDA Relay</span>
+            <!-- Controls Page -->
+            <div id="page-controls" class="page">
+                <div class="controls-container">
+                    <!-- WAPDA Control -->
+                    <div class="control-panel">
+                        <div class="panel-header">
+                            <i class="fas fa-bolt"></i>
+                            <div>
+                                <h3>WAPDA Relay</h3>
+                                <p>Grid Power Controller</p>
+                            </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="wapdaModeToggle">
+                                <input type="checkbox" id="ctrlWapdaAuto">
+                                <span class="toggle-slider"></span>
+                                <span>Auto Mode</span>
+                            </label>
+                        </div>
+                        <div class="panel-body">
+                            <div class="relay-status" id="ctrlWapdaStatus">
+                                <i class="fas fa-power-off"></i>
+                                <span>OFF</span>
+                            </div>
+                            <div class="button-group">
+                                <button class="btn-primary" id="ctrlWapdaOn" onclick="sendCommand('WAPDA_RELAY', 1)">
+                                    <i class="fas fa-play"></i> Turn ON
+                                </button>
+                                <button class="btn-danger" id="ctrlWapdaOff" onclick="sendCommand('WAPDA_RELAY', 0)">
+                                    <i class="fas fa-stop"></i> Turn OFF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Heavy Load Control -->
+                    <div class="control-panel">
+                        <div class="panel-header">
+                            <i class="fas fa-microchip"></i>
+                            <div>
+                                <h3>Heavy Load Relay</h3>
+                                <p>High Power Equipment</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="ctrlHeavyAuto">
+                                <span class="toggle-slider"></span>
+                                <span>Auto Mode</span>
+                            </label>
+                        </div>
+                        <div class="panel-body">
+                            <div class="relay-status" id="ctrlHeavyStatus">
+                                <i class="fas fa-power-off"></i>
+                                <span>OFF</span>
+                            </div>
+                            <div class="button-group">
+                                <button class="btn-primary" id="ctrlHeavyOn" onclick="sendCommand('HEAVY_LOAD', 1)">
+                                    <i class="fas fa-play"></i> Turn ON
+                                </button>
+                                <button class="btn-danger" id="ctrlHeavyOff" onclick="sendCommand('HEAVY_LOAD', 0)">
+                                    <i class="fas fa-stop"></i> Turn OFF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode Selection -->
+                <div class="modes-section">
+                    <h3><i class="fas fa-sliders-h"></i> Operation Modes</h3>
+                    <div class="modes-grid">
+                        <div class="mode-option" data-mode="HOME" onclick="setUserMode('HOME')">
+                            <i class="fas fa-home"></i>
+                            <div class="mode-info">
+                                <strong>Home Mode</strong>
+                                <small>Balanced & Efficient</small>
+                            </div>
+                            <i class="fas fa-check-circle mode-check"></i>
+                        </div>
+                        <div class="mode-option" data-mode="SAVING" onclick="setUserMode('SAVING')">
+                            <i class="fas fa-coins"></i>
+                            <div class="mode-info">
+                                <strong>Saving Mode</strong>
+                                <small>Maximize Solar</small>
+                            </div>
+                            <i class="fas fa-check-circle mode-check"></i>
+                        </div>
+                        <div class="mode-option" data-mode="PERFORMANCE" onclick="setUserMode('PERFORMANCE')">
+                            <i class="fas fa-rocket"></i>
+                            <div class="mode-info">
+                                <strong>Performance Mode</strong>
+                                <small>Maximum Power</small>
+                            </div>
+                            <i class="fas fa-check-circle mode-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="page-analytics" class="page">
+                <div class="analytics-grid">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-line"></i> Power Consumption (24 Hours)</h3>
+                            <div class="chart-controls">
+                                <button class="chart-btn active" data-period="hourly">Hourly</button>
+                            </div>
+                        </div>
+                        <canvas id="powerChart"></canvas>
+                    </div>
+
+                    <div class="stats-card">
+                        <h3><i class="fas fa-chart-pie"></i> Energy Distribution</h3>
+                        <div class="stats-list">
+                            <div class="stat-row">
+                                <span>Solar Energy</span>
+                                <div class="stat-bar">
+                                    <div class="bar-fill solar" style="width: 45%"></div>
+                                </div>
+                                <span class="stat-percent" id="solarPercent">45%</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>Grid Energy</span>
+                                <div class="stat-bar">
+                                    <div class="bar-fill grid" style="width: 55%"></div>
+                                </div>
+                                <span class="stat-percent" id="gridPercent">55%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-card">
+                        <h3><i class="fas fa-charging-station"></i> Performance Metrics</h3>
+                        <div class="metric-list">
+                            <div class="metric-row">
+                                <span>Peak Power</span>
+                                <strong id="peakPower">0 W</strong>
+                            </div>
+                            <div class="metric-row">
+                                <span>Avg Voltage</span>
+                                <strong id="avgVoltage">0 V</strong>
+                            </div>
+                            <div class="metric-row">
+                                <span>Energy Generated</span>
+                                <strong id="energyGen">0 kWh</strong>
+                            </div>
+                            <div class="metric-row">
+                                <span>Energy Consumed</span>
+                                <strong id="energyCons">0 kWh</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-card">
+                        <h3><i class="fas fa-leaf"></i> Environmental Impact</h3>
+                        <div class="impact-metrics">
+                            <div class="impact-item">
+                                <i class="fas fa-tree"></i>
+                                <div>
+                                    <span>CO2 Saved</span>
+                                    <strong id="co2Saved">0 kg</strong>
+                                </div>
+                            </div>
+                            <div class="impact-item">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <div>
+                                    <span>Cost Saved</span>
+                                    <strong id="costSaved">$0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Page -->
+            <div id="page-history" class="page">
+                <div class="history-header">
+                    <h3><i class="fas fa-list-ul"></i> Event History Log</h3>
+                    <button class="clear-btn" onclick="clearEvents()">
+                        <i class="fas fa-trash-alt"></i> Clear All
+                    </button>
+                </div>
+                <div class="events-container" id="eventsList">
+                    <div class="event-placeholder">
+                        <i class="fas fa-inbox"></i>
+                        <p>No events recorded</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="page-settings" class="page">
+                <div class="settings-container">
+                    <div class="settings-group">
+                        <h3><i class="fas fa-sliders-h"></i> LDR Thresholds</h3>
+                        <div class="setting-item">
+                            <label>Sunny Threshold</label>
+                            <div class="setting-control">
+                                <input type="range" id="sunThreshold" min="0" max="4095" value="1800">
+                                <span id="sunValue">1800</span>
+                            </div>
+                            <small>Above this value = Sunny/Bright</small>
+                        </div>
+                        <div class="setting-item">
+                            <label>Dark Threshold</label>
+                            <div class="setting-control">
+                                <input type="range" id="darkThreshold" min="0" max="4095" value="1200">
+                                <span id="darkValue">1200</span>
+                            </div>
+                            <small>Below this value = Dark/Cloudy</small>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3><i class="fas fa-bell"></i> Notifications</h3>
+                        <div class="setting-item toggle-item">
+                            <span>Enable Desktop Notifications</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="notifToggle">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <div class="control-body">
-                            <button id="wapdaOnBtn" class="btn btn-primary" disabled>Turn ON</button>
-                            <button id="wapdaOffBtn" class="btn btn-secondary" disabled>Turn OFF</button>
-                            <span class="control-status" id="wapdaRelayStatus">--</span>
-                        </div>
-                    </div>
-
-                    <!-- Heavy Load Relay -->
-                    <div class="control-group">
-                        <div class="control-header">
-                            <span class="control-title">Heavy Load Relay</span>
+                        <div class="setting-item toggle-item">
+                            <span>Sound Alerts</span>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="heavyModeToggle">
+                                <input type="checkbox" id="soundToggle">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
-                        <div class="control-body">
-                            <button id="heavyOnBtn" class="btn btn-primary" disabled>Turn ON</button>
-                            <button id="heavyOffBtn" class="btn btn-secondary" disabled>Turn OFF</button>
-                            <span class="control-status" id="heavyRelayStatus">--</span>
-                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- LDR Settings -->
-            <div class="card ldr-card">
-                <div class="card-header">
-                    <h2>🌞 Light Sensor Settings</h2>
-                    <span class="card-subtitle">Configure LDR thresholds</span>
-                </div>
-                <div class="ldr-controls">
-                    <div class="ldr-toggle">
-                        <span>Enable LDR Control</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="ldrEnableToggle" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="threshold-control">
-                        <div class="threshold-item">
-                            <label>Sunny/Bright Threshold</label>
-                            <input type="range" id="sunThreshold" min="0" max="4095" value="1500">
-                            <span class="threshold-value" id="sunThresholdValue">1500</span>
+                    <div class="settings-group">
+                        <h3><i class="fas fa-database"></i> Data Management</h3>
+                        <div class="setting-item">
+                            <button class="btn-secondary" onclick="exportData()">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                            <button class="btn-danger" onclick="resetData()">
+                                <i class="fas fa-trash"></i> Reset All Data
+                            </button>
                         </div>
-                        <div class="threshold-item">
-                            <label>Dark/Cloudy Threshold</label>
-                            <input type="range" id="darkThreshold" min="0" max="4095" value="800">
-                            <span class="threshold-value" id="darkThresholdValue">800</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Energy Chart -->
-            <div class="card chart-card">
-                <div class="card-header">
-                    <h2>📈 Energy History</h2>
-                    <span class="card-subtitle">Last 24 hours</span>
-                </div>
-                <canvas id="energyChart"></canvas>
-            </div>
-
-            <!-- System Info -->
-            <div class="card info-card">
-                <div class="card-header">
-                    <h2>ℹ️ System Information</h2>
-                    <span class="card-subtitle">Operational details</span>
-                </div>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">Operation Mode</span>
-                        <span class="info-value" id="operationMode">--</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Power Efficiency</span>
-                        <span class="info-value" id="efficiency">--</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Daily Energy</span>
-                        <span class="info-value" id="dailyEnergy">--</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">System Status</span>
-                        <span class="info-value" id="systemStatus">Operational</span>
                     </div>
                 </div>
             </div>
         </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <p>Smart Energy Controller v3.0 | Real-time Solar Power Management</p>
-        </footer>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/js/dashboard.js"></script>
+    <div id="notificationContainer"></div>
+    <script src="/script.js"></script>
 </body>
 </html>

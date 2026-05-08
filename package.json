@@ -1,34 +1,14 @@
 {
   "name": "smart-energy-controller",
   "version": "3.0.0",
-  "description": "Smart Energy Controller Web Dashboard - Monitor and control solar energy system",
+  "description": "Smart Energy Controller - Complete Web Control System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "npm install"
-  },
-  "keywords": [
-    "solar",
-    "energy",
-    "esp32",
-    "controller",
-    "iot",
-    "smart-home"
-  ],
-  "author": "Smart Energy Controller",
-  "license": "MIT",
-  "engines": {
-    "node": ">=16.0.0"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.6.1",
-    "axios": "^1.5.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
+    "cors": "^2.8.5"
   }
 }
