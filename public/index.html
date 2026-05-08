@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Energy Controller | Intelligent Power Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Smart Energy Controller | Complete Power Management System</title>
     <link rel="stylesheet" href="/style.css">
     <script src="/socket.io/socket.io.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
 </head>
 <body>
     <div class="app">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
@@ -37,22 +37,26 @@
                     <i class="fas fa-history"></i>
                     <span>History</span>
                 </a>
+                <a href="#" class="nav-item" data-page="alerts">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                    <span class="alert-badge" id="alertBadge">0</span>
+                </a>
                 <a href="#" class="nav-item" data-page="settings">
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
                 </a>
             </nav>
             <div class="sidebar-footer">
-                <div class="status-indicator" id="sidebarStatus">
-                    <div class="status-dot"></div>
-                    <span>Connected</span>
+                <div class="esp-status" id="espStatus">
+                    <div class="status-dot" id="espStatusDot"></div>
+                    <span id="espStatusText">ESP32 Online</span>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Top Bar -->
             <div class="top-bar">
                 <div class="page-title">
                     <h1 id="pageTitle">Dashboard</h1>
@@ -60,7 +64,7 @@
                 </div>
                 <div class="top-bar-actions">
                     <div class="time-display" id="currentTime"></div>
-                    <div class="user-mode-selector" id="userModeDisplay">
+                    <div class="user-mode" id="userModeDisplay">
                         <i class="fas fa-home"></i>
                         <span>Home Mode</span>
                     </div>
@@ -69,16 +73,17 @@
 
             <!-- Dashboard Page -->
             <div id="page-dashboard" class="page active">
-                <!-- Hero Status -->
-                <div class="hero-status-card" id="systemStatusCard">
-                    <div class="hero-icon"><i class="fas fa-sun"></i></div>
-                    <div class="hero-details">
-                        <div class="hero-label">System Status</div>
-                        <div class="hero-value" id="statusMessage">Solar Power Active</div>
+                <!-- System Status Card with Logo -->
+                <div class="system-status-card" id="systemStatusCard">
+                    <div class="status-icon" id="statusIcon">
+                        <i class="fas fa-solar-panel"></i>
                     </div>
-                    <div class="hero-meta">
-                        <div><i class="fas fa-microchip"></i> <span id="lastSeenText">Online</span></div>
-                        <div><i class="fas fa-chart-line"></i> <span id="efficiencyText">98% Efficient</span></div>
+                    <div class="status-info">
+                        <div class="status-label">SYSTEM STATUS</div>
+                        <div class="status-message" id="statusMessage">Solar Power Active</div>
+                    </div>
+                    <div class="status-badge" id="statusBadge">
+                        <span id="statusText">OPERATIONAL</span>
                     </div>
                 </div>
 
@@ -111,7 +116,7 @@
                     <div class="metric-box">
                         <i class="fas fa-sun"></i>
                         <div class="metric-data">
-                            <span class="metric-label">Solar Intensity</span>
+                            <span class="metric-label">Solar</span>
                             <span class="metric-value" id="dashLdr">0</span>
                             <span class="metric-unit">lux</span>
                         </div>
@@ -150,34 +155,83 @@
                     </div>
                 </div>
 
-                <!-- Daily Summary Preview -->
-                <div class="summary-preview">
+                <!-- Today's Summary -->
+                <div class="summary-section">
                     <div class="section-header">
                         <h3><i class="fas fa-chart-simple"></i> Today's Summary</h3>
                     </div>
-                    <div class="preview-stats">
-                        <div class="preview-stat">
-                            <span class="stat-icon">⏱️</span>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <i class="fas fa-clock"></i>
                             <div>
-                                <div class="stat-label">Grid Usage</div>
-                                <div class="stat-number" id="previewWapda">0</div>
-                                <div class="stat-unit">hours</div>
+                                <div class="summary-label">Grid Usage</div>
+                                <div class="summary-value" id="summaryWapda">0.0</div>
+                                <div class="summary-unit">hours</div>
                             </div>
                         </div>
-                        <div class="preview-stat">
-                            <span class="stat-icon">🔌</span>
+                        <div class="summary-card">
+                            <i class="fas fa-microchip"></i>
                             <div>
-                                <div class="stat-label">Load Active</div>
-                                <div class="stat-number" id="previewLoad">0</div>
-                                <div class="stat-unit">hours</div>
+                                <div class="summary-label">Load Active</div>
+                                <div class="summary-value" id="summaryLoad">0.0</div>
+                                <div class="summary-unit">hours</div>
                             </div>
                         </div>
-                        <div class="preview-stat">
-                            <span class="stat-icon">☀️</span>
+                        <div class="summary-card">
+                            <i class="fas fa-solar-panel"></i>
                             <div>
-                                <div class="stat-label">Solar Saved</div>
-                                <div class="stat-number" id="previewSolar">0</div>
-                                <div class="stat-unit">hours</div>
+                                <div class="summary-label">Solar Saved</div>
+                                <div class="summary-value" id="summarySolar">0.0</div>
+                                <div class="summary-unit">hours</div>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <i class="fas fa-charging-station"></i>
+                            <div>
+                                <div class="summary-label">Units Saved</div>
+                                <div class="summary-value" id="summaryUnitsSaved">0.0</div>
+                                <div class="summary-unit">kWh</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Savings Section -->
+                <div class="cost-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-money-bill-wave"></i> Cost & Savings</h3>
+                    </div>
+                    <div class="cost-grid">
+                        <div class="cost-card">
+                            <i class="fas fa-charging-station"></i>
+                            <div>
+                                <div class="cost-label">Units Consumed</div>
+                                <div class="cost-value" id="unitsConsumed">0.00</div>
+                                <div class="cost-unit">kWh</div>
+                            </div>
+                        </div>
+                        <div class="cost-card">
+                            <i class="fas fa-solar-panel"></i>
+                            <div>
+                                <div class="cost-label">Units Saved</div>
+                                <div class="cost-value" id="unitsSaved">0.00</div>
+                                <div class="cost-unit">kWh</div>
+                            </div>
+                        </div>
+                        <div class="cost-card">
+                            <i class="fas fa-rupee-sign"></i>
+                            <div>
+                                <div class="cost-label">Cost Used</div>
+                                <div class="cost-value" id="costUsed">0.00</div>
+                                <div class="cost-unit">PKR</div>
+                            </div>
+                        </div>
+                        <div class="cost-card">
+                            <i class="fas fa-leaf"></i>
+                            <div>
+                                <div class="cost-label">Cost Saved</div>
+                                <div class="cost-value" id="costSaved">0.00</div>
+                                <div class="cost-unit">PKR</div>
                             </div>
                         </div>
                     </div>
@@ -187,7 +241,6 @@
             <!-- Controls Page -->
             <div id="page-controls" class="page">
                 <div class="controls-container">
-                    <!-- WAPDA Control -->
                     <div class="control-panel">
                         <div class="panel-header">
                             <i class="fas fa-bolt"></i>
@@ -198,7 +251,7 @@
                             <label class="toggle-switch">
                                 <input type="checkbox" id="ctrlWapdaAuto">
                                 <span class="toggle-slider"></span>
-                                <span>Auto Mode</span>
+                                <span>Auto</span>
                             </label>
                         </div>
                         <div class="panel-body">
@@ -217,7 +270,6 @@
                         </div>
                     </div>
 
-                    <!-- Heavy Load Control -->
                     <div class="control-panel">
                         <div class="panel-header">
                             <i class="fas fa-microchip"></i>
@@ -228,7 +280,7 @@
                             <label class="toggle-switch">
                                 <input type="checkbox" id="ctrlHeavyAuto">
                                 <span class="toggle-slider"></span>
-                                <span>Auto Mode</span>
+                                <span>Auto</span>
                             </label>
                         </div>
                         <div class="panel-body">
@@ -248,7 +300,6 @@
                     </div>
                 </div>
 
-                <!-- Mode Selection -->
                 <div class="modes-section">
                     <h3><i class="fas fa-sliders-h"></i> Operation Modes</h3>
                     <div class="modes-grid">
@@ -286,11 +337,22 @@
                     <div class="chart-card full-width">
                         <div class="chart-header">
                             <h3><i class="fas fa-chart-line"></i> Power Consumption (24 Hours)</h3>
-                            <div class="chart-controls">
-                                <button class="chart-btn active" data-period="hourly">Hourly</button>
-                            </div>
                         </div>
                         <canvas id="powerChart"></canvas>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-line"></i> Voltage Trend (24 Hours)</h3>
+                        </div>
+                        <canvas id="voltageChart"></canvas>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3><i class="fas fa-chart-line"></i> Solar Intensity (24 Hours)</h3>
+                        </div>
+                        <canvas id="solarChart"></canvas>
                     </div>
 
                     <div class="stats-card">
@@ -299,16 +361,16 @@
                             <div class="stat-row">
                                 <span>Solar Energy</span>
                                 <div class="stat-bar">
-                                    <div class="bar-fill solar" style="width: 45%"></div>
+                                    <div class="bar-fill solar" id="solarBarFill" style="width: 0%"></div>
                                 </div>
-                                <span class="stat-percent" id="solarPercent">45%</span>
+                                <span class="stat-percent" id="solarPercent">0%</span>
                             </div>
                             <div class="stat-row">
                                 <span>Grid Energy</span>
                                 <div class="stat-bar">
-                                    <div class="bar-fill grid" style="width: 55%"></div>
+                                    <div class="bar-fill grid" id="gridBarFill" style="width: 0%"></div>
                                 </div>
-                                <span class="stat-percent" id="gridPercent">55%</span>
+                                <span class="stat-percent" id="gridPercent">0%</span>
                             </div>
                         </div>
                     </div>
@@ -349,7 +411,14 @@
                                 <i class="fas fa-money-bill-wave"></i>
                                 <div>
                                     <span>Cost Saved</span>
-                                    <strong id="costSaved">$0</strong>
+                                    <strong id="costSavedAnalytics">$0</strong>
+                                </div>
+                            </div>
+                            <div class="impact-item">
+                                <i class="fas fa-solar-panel"></i>
+                                <div>
+                                    <span>Units Saved</span>
+                                    <strong id="unitsSavedAnalytics">0 kWh</strong>
                                 </div>
                             </div>
                         </div>
@@ -373,42 +442,50 @@
                 </div>
             </div>
 
+            <!-- Alerts Page -->
+            <div id="page-alerts" class="page">
+                <div class="alerts-header">
+                    <h3><i class="fas fa-bell"></i> System Alerts</h3>
+                    <button class="clear-btn" onclick="clearAlerts()">
+                        <i class="fas fa-trash-alt"></i> Clear All
+                    </button>
+                </div>
+                <div class="alerts-container" id="alertsList">
+                    <div class="alert-placeholder">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>No alerts</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Settings Page -->
             <div id="page-settings" class="page">
                 <div class="settings-container">
                     <div class="settings-group">
                         <h3><i class="fas fa-sliders-h"></i> LDR Thresholds</h3>
                         <div class="setting-item">
-                            <label>Sunny Threshold</label>
+                            <label>Sunny Threshold (Above = Sunny)</label>
                             <div class="setting-control">
                                 <input type="range" id="sunThreshold" min="0" max="4095" value="1800">
                                 <span id="sunValue">1800</span>
                             </div>
-                            <small>Above this value = Sunny/Bright</small>
                         </div>
                         <div class="setting-item">
-                            <label>Dark Threshold</label>
+                            <label>Dark Threshold (Below = Dark)</label>
                             <div class="setting-control">
                                 <input type="range" id="darkThreshold" min="0" max="4095" value="1200">
                                 <span id="darkValue">1200</span>
                             </div>
-                            <small>Below this value = Dark/Cloudy</small>
                         </div>
+                        <button class="save-btn" onclick="saveThresholds()">Save Thresholds</button>
                     </div>
 
                     <div class="settings-group">
                         <h3><i class="fas fa-bell"></i> Notifications</h3>
-                        <div class="setting-item toggle-item">
-                            <span>Enable Desktop Notifications</span>
+                        <div class="toggle-item">
+                            <span>Desktop Notifications</span>
                             <label class="toggle-switch">
                                 <input type="checkbox" id="notifToggle">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <div class="setting-item toggle-item">
-                            <span>Sound Alerts</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="soundToggle">
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -416,12 +493,12 @@
 
                     <div class="settings-group">
                         <h3><i class="fas fa-database"></i> Data Management</h3>
-                        <div class="setting-item">
+                        <div class="button-group-settings">
                             <button class="btn-secondary" onclick="exportData()">
                                 <i class="fas fa-download"></i> Export Data
                             </button>
                             <button class="btn-danger" onclick="resetData()">
-                                <i class="fas fa-trash"></i> Reset All Data
+                                <i class="fas fa-trash"></i> Reset Data
                             </button>
                         </div>
                     </div>
