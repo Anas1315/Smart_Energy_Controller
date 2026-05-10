@@ -32,7 +32,7 @@ let esp32Data = {
   wapdaAutoMode: true,
   heavyLoadAutoMode: true,
   currentHour: 12,
-  lastUpdate: new Date().toLocaleTimeString(),
+  lastUpdate: Date.now(),
   esp32Online: false,
   lastSeen: Date.now(),
 };
@@ -146,13 +146,24 @@ function updateDailyStats() {
       lastLoadOnTime: null,
       lastLoadOffTime: null,
     };
+    // Reset hourly data for the new day
+    hourlyData = Array(24).fill().map((_, i) => ({
+      hour: i,
+      voltage: 0,
+      current: 0,
+      power: 0,
+      ldrValue: 0,
+    }));
   }
 
   // Calculate units and costs
-  dailyStats.unitsConsumed = (dailyStats.energyConsumed / 1000).toFixed(2);
-  dailyStats.unitsSaved = (dailyStats.energyGenerated / 1000).toFixed(2);
-  dailyStats.costUsed = (dailyStats.unitsConsumed * COST_PER_UNIT).toFixed(2);
-  dailyStats.costSaved = (dailyStats.unitsSaved * COST_PER_UNIT).toFixed(2);
+  const unitsConsumedRaw = dailyStats.energyConsumed / 1000;
+  const unitsSavedRaw = dailyStats.energyGenerated / 1000;
+  
+  dailyStats.unitsConsumed = unitsConsumedRaw.toFixed(2);
+  dailyStats.unitsSaved = unitsSavedRaw.toFixed(2);
+  dailyStats.costUsed = (unitsConsumedRaw * COST_PER_UNIT).toFixed(2);
+  dailyStats.costSaved = (unitsSavedRaw * COST_PER_UNIT).toFixed(2);
 }
 
 function updateSystemStatus() {
@@ -224,8 +235,18 @@ function updateSystemStatus() {
 app.post("/api/esp32/status", (req, res) => {
   console.log("\n📡 [ESP32] Status Update Received");
 
+  // Invert LDR value because hardware wiring (LDR to GND) gives 4095 at night.
+  // This makes 0 = Dark and 4095 = Bright
+  if (req.body.ldrValue !== undefined) {
+    req.body.ldrValue = Math.max(0, 4095 - req.body.ldrValue);
+  }
+
+  const now = Date.now();
+  let timeDeltaHours = (now - esp32Data.lastSeen) / (1000 * 3600);
+  if (timeDeltaHours > 1 || timeDeltaHours < 0) timeDeltaHours = 5 / 3600;
+
   // Update last seen
-  esp32Data.lastSeen = Date.now();
+  esp32Data.lastSeen = now;
   esp32Data.esp32Online = true;
 
   // Check for state changes and add events
@@ -294,7 +315,7 @@ app.post("/api/esp32/status", (req, res) => {
   esp32Data = {
     ...esp32Data,
     ...req.body,
-    lastUpdate: new Date().toLocaleTimeString(),
+    lastUpdate: now,
   };
 
   // Update hourly data
@@ -314,9 +335,9 @@ app.post("/api/esp32/status", (req, res) => {
 
   // Update energy consumed
   if (esp32Data.power > 0) {
-    dailyStats.energyConsumed += esp32Data.power * (5 / 3600); // 5 second interval
+    dailyStats.energyConsumed += esp32Data.power * timeDeltaHours;
     dailyStats.energyGenerated +=
-      (esp32Data.isSunny ? esp32Data.power * 0.7 : 0) * (5 / 3600);
+      (esp32Data.isSunny ? esp32Data.power * 0.7 : 0) * timeDeltaHours;
   }
 
   updateDailyStats();
@@ -336,12 +357,22 @@ app.post("/api/esp32/status", (req, res) => {
 app.post("/api/esp32/data", (req, res) => {
   console.log("\n📊 [ESP32] Sensor Data Received");
 
+  // Invert LDR value because hardware wiring (LDR to GND) gives 4095 at night.
+  // This makes 0 = Dark and 4095 = Bright
+  if (req.body.ldrValue !== undefined) {
+    req.body.ldrValue = Math.max(0, 4095 - req.body.ldrValue);
+  }
+
+  const now = Date.now();
+  let timeDeltaHours = (now - esp32Data.lastSeen) / (1000 * 3600);
+  if (timeDeltaHours > 1 || timeDeltaHours < 0) timeDeltaHours = 5 / 3600;
+
   esp32Data = {
     ...esp32Data,
     ...req.body,
-    lastUpdate: new Date().toLocaleTimeString(),
+    lastUpdate: now,
   };
-  esp32Data.lastSeen = Date.now();
+  esp32Data.lastSeen = now;
   esp32Data.esp32Online = true;
 
   // Update hourly data
@@ -364,9 +395,9 @@ app.post("/api/esp32/data", (req, res) => {
 
   // Update energy consumed
   if (req.body.power > 0) {
-    dailyStats.energyConsumed += (req.body.power || 0) * (5 / 3600);
+    dailyStats.energyConsumed += (req.body.power || 0) * timeDeltaHours;
     dailyStats.energyGenerated +=
-      (esp32Data.isSunny ? (req.body.power || 0) * 0.7 : 0) * (5 / 3600);
+      (esp32Data.isSunny ? (req.body.power || 0) * 0.7 : 0) * timeDeltaHours;
   }
 
   updateDailyStats();
@@ -488,6 +519,14 @@ io.on("connection", (socket) => {
   socket.emit("user-mode", { mode: userMode });
   socket.emit("hourly-data", hourlyData);
 });
+
+// ========== OFFLINE DETECTION ==========
+setInterval(() => {
+  const now = Date.now();
+  if (now - esp32Data.lastSeen > 60000 && esp32Data.esp32Online) {
+    updateSystemStatus();
+  }
+}, 10000);
 
 // ========== START SERVER ==========
 const PORT = 3000;

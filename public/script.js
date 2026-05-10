@@ -8,6 +8,7 @@ let solarChart = null;
 
 // ========== DOM ELEMENTS ==========
 let currentPage = "dashboard";
+let currentAnimationState = null;
 
 // ========== INITIALIZATION ==========
 document.addEventListener("DOMContentLoaded", () => {
@@ -15,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeSocket();
   initializeCharts();
   initializeSettings();
+  initializeControls();
   loadInitialData();
   startTimeUpdate();
   requestNotificationPermission();
@@ -104,7 +106,6 @@ function initializeSocket() {
   socket.on("new-alert", (alert) => {
     addAlertToList(alert);
     updateAlertBadge();
-    if (currentPage === "alerts") loadAlerts();
     showNotification(alert.message, alert.type, getAlertTitle(alert.priority));
   });
 
@@ -154,6 +155,7 @@ function updateConnectionStatus(connected) {
 
 // ========== UPDATE DASHBOARD ==========
 function updateDashboard(data) {
+  updateWeatherAnimation(data);
   // Quick metrics
   if (data.voltage !== undefined)
     document.getElementById("dashVoltage").textContent =
@@ -188,7 +190,36 @@ function updateDashboard(data) {
   }
 
   if (data.lastUpdate !== undefined) {
-    document.getElementById("dashUpdate").textContent = data.lastUpdate;
+    let updateText = data.lastUpdate;
+    if (typeof data.lastUpdate === "number") {
+      updateText = new Date(data.lastUpdate).toLocaleTimeString("en-US", { hour12: true });
+    }
+    document.getElementById("dashUpdate").textContent = updateText;
+  }
+}
+
+function updateWeatherAnimation(data) {
+  if (data.isDayTime === undefined) return;
+  const container = document.getElementById("weatherBg");
+  if (!container) return;
+  
+  let state = "night";
+  if (data.isDayTime) {
+      state = data.isSunny ? "sunny" : "cloudy";
+  }
+  
+  if (currentAnimationState === state) return;
+  currentAnimationState = state;
+  
+  if (state === "sunny") {
+      container.innerHTML = `<div class="sun-anim"></div>`;
+      container.className = "weather-animation-container sunny active";
+  } else if (state === "cloudy") {
+      container.innerHTML = `<div class="cloud-anim cloud-anim-1"></div><div class="cloud-anim cloud-anim-2"></div>`;
+      container.className = "weather-animation-container cloudy active";
+  } else if (state === "night") {
+      container.innerHTML = `<div class="stars-anim"></div><div class="moon-anim"></div>`;
+      container.className = "weather-animation-container night active";
   }
 }
 
@@ -319,18 +350,23 @@ function updateSystemStatus(status) {
   }
 
   if (systemCard) {
-    let gradient =
-      "linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(52, 152, 219, 0.1))";
+    let gradient = "transparent";
+    const weatherBg = document.getElementById("weatherBg");
+    
     if (status.status === "offline") {
-      gradient =
-        "linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(231, 76, 60, 0.05))";
+      gradient = "linear-gradient(135deg, rgba(231, 76, 60, 0.25), rgba(231, 76, 60, 0.1))";
+      if (weatherBg) weatherBg.style.display = "none";
     } else if (status.status === "no_power") {
-      gradient =
-        "linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(231, 76, 60, 0.1))";
+      gradient = "linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.15))";
+      if (weatherBg) weatherBg.style.display = "none";
     } else if (status.status === "backup") {
-      gradient =
-        "linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(243, 156, 18, 0.05))";
+      gradient = "linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(243, 156, 18, 0.1))";
+      if (weatherBg) weatherBg.style.display = "none";
+    } else {
+      // Normal or solar, show weather animation
+      if (weatherBg) weatherBg.style.display = "block";
     }
+    
     systemCard.style.background = gradient;
   }
 }
@@ -655,7 +691,12 @@ function updateAlertBadgeCount(alerts) {
 }
 
 function updateAlertBadge() {
-  loadAlerts();
+  const badge = document.getElementById("alertBadge");
+  if (badge) {
+    let currentCount = parseInt(badge.textContent) || 0;
+    badge.textContent = currentCount + 1;
+    badge.style.display = "block";
+  }
 }
 
 async function clearAlerts() {
@@ -698,6 +739,9 @@ function initializeSettings() {
   if (notifToggle) {
     notifToggle.addEventListener("change", (e) => {
       localStorage.setItem("notifications", e.target.checked);
+      if (e.target.checked && "Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
     });
     const saved = localStorage.getItem("notifications");
     if (saved !== null) notifToggle.checked = saved === "true";
@@ -869,13 +913,15 @@ function startTimeUpdate() {
 }
 
 // ========== EVENT LISTENERS FOR CONTROLS ==========
-document.getElementById("ctrlWapdaAuto")?.addEventListener("change", (e) => {
-  sendCommand("WAPDA_MODE", e.target.checked ? 1 : 0);
-});
+function initializeControls() {
+  document.getElementById("ctrlWapdaAuto")?.addEventListener("change", (e) => {
+    sendCommand("WAPDA_MODE", e.target.checked ? 1 : 0);
+  });
 
-document.getElementById("ctrlHeavyAuto")?.addEventListener("change", (e) => {
-  sendCommand("HEAVY_LOAD_MODE", e.target.checked ? 1 : 0);
-});
+  document.getElementById("ctrlHeavyAuto")?.addEventListener("change", (e) => {
+    sendCommand("HEAVY_LOAD_MODE", e.target.checked ? 1 : 0);
+  });
+}
 
 // ========== EXPORT GLOBAL FUNCTIONS ==========
 window.sendCommand = sendCommand;
