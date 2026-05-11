@@ -192,7 +192,9 @@ function updateDashboard(data) {
   if (data.lastUpdate !== undefined) {
     let updateText = data.lastUpdate;
     if (typeof data.lastUpdate === "number") {
-      updateText = new Date(data.lastUpdate).toLocaleTimeString("en-US", { hour12: true });
+      updateText = new Date(data.lastUpdate).toLocaleTimeString("en-US", {
+        hour12: true,
+      });
     }
     document.getElementById("dashUpdate").textContent = updateText;
   }
@@ -202,24 +204,116 @@ function updateWeatherAnimation(data) {
   if (data.isDayTime === undefined) return;
   const container = document.getElementById("weatherBg");
   if (!container) return;
-  
+
   let state = "night";
+  let solarIntensity = data.ldrValue || 0;
+
   if (data.isDayTime) {
-      state = data.isSunny ? "sunny" : "cloudy";
+    // Sunny: LDR > 1800, Cloudy: LDR between 800-1800, Dark: LDR < 800
+    if (solarIntensity > 1800) {
+      state = "sunny";
+    } else if (solarIntensity > 800 && solarIntensity <= 1800) {
+      state = "cloudy";
+    } else {
+      state = "dark";
+    }
+  } else {
+    state = "night";
   }
-  
+
   if (currentAnimationState === state) return;
   currentAnimationState = state;
-  
+
   if (state === "sunny") {
-      container.innerHTML = `<div class="sun-anim"></div>`;
-      container.className = "weather-animation-container sunny active";
+    // Sunny animation with sun rays and solar panels
+    container.innerHTML = `
+            <div class="sun-anim"></div>
+            <div class="solar-panel-container">
+                <div class="solar-panel">
+                    <div class="solar-panel-grid"></div>
+                </div>
+            </div>
+            <div class="ray-falling"></div>
+            <div class="ray-falling"></div>
+            <div class="ray-falling"></div>
+            <div class="sun-ray" style="transform: rotate(0deg) translateX(100px); width: 150px;"></div>
+            <div class="sun-ray" style="transform: rotate(45deg) translateX(100px); width: 150px;"></div>
+            <div class="sun-ray" style="transform: rotate(90deg) translateX(100px); width: 150px;"></div>
+            <div class="sun-ray" style="transform: rotate(135deg) translateX(100px); width: 150px;"></div>
+            <div class="sun-ray" style="transform: rotate(180deg) translateX(100px); width: 150px;"></div>
+            <div class="sun-ray" style="transform: rotate(225deg) translateX(100px); width: 150px;"></div>
+            <div class="sun-ray" style="transform: rotate(270deg) translateX(100px); width: 150px;"></div>
+            <div class="sun-ray" style="transform: rotate(315deg) translateX(100px); width: 150px;"></div>
+        `;
+    container.className = "weather-animation-container sunny active";
   } else if (state === "cloudy") {
-      container.innerHTML = `<div class="cloud-anim cloud-anim-1"></div><div class="cloud-anim cloud-anim-2"></div>`;
-      container.className = "weather-animation-container cloudy active";
+    // Cloudy animation with clouds, weak sun, and wind
+    container.innerHTML = `
+            <div class="cloud-anim cloud-anim-1"></div>
+            <div class="cloud-anim cloud-anim-2"></div>
+            <div class="cloud-anim cloud-anim-3"></div>
+            <div class="weak-sun"></div>
+            <div class="wind-line"></div>
+            <div class="wind-line"></div>
+            <div class="wind-line"></div>
+            <div class="wind-line"></div>
+            <div class="solar-panel-container">
+                <div class="solar-panel">
+                    <div class="solar-panel-grid"></div>
+                </div>
+            </div>
+        `;
+    container.className = "weather-animation-container cloudy active";
+  } else if (state === "dark") {
+    // Dark/Thunderstorm animation with dark clouds, lightning, and rain
+    container.innerHTML = `
+            <div class="dark-cloud dark-cloud-1"></div>
+            <div class="dark-cloud dark-cloud-2"></div>
+            <div class="dark-cloud dark-cloud-3"></div>
+            <div class="lightning"><i class="fas fa-bolt"></i></div>
+            <div class="lightning"><i class="fas fa-bolt"></i></div>
+            <div class="rain-drop"></div>
+            <div class="rain-drop"></div>
+            <div class="rain-drop"></div>
+            <div class="rain-drop"></div>
+            <div class="rain-drop"></div>
+            <div class="rain-drop"></div>
+            <div class="solar-panel-container">
+                <div class="solar-panel" style="opacity: 0.3;">
+                    <div class="solar-panel-grid"></div>
+                </div>
+            </div>
+        `;
+    container.className = "weather-animation-container dark active";
   } else if (state === "night") {
-      container.innerHTML = `<div class="stars-anim"></div><div class="moon-anim"></div>`;
-      container.className = "weather-animation-container night active";
+    // Night animation with moon, stars, shooting stars, and nebula
+    container.innerHTML = `
+            <div class="moon-anim">
+                <div class="moon-crater moon-crater-1"></div>
+                <div class="moon-crater moon-crater-2"></div>
+                <div class="moon-crater moon-crater-3"></div>
+            </div>
+            <div class="stars-container">
+                <div class="star star-1"></div>
+                <div class="star star-2"></div>
+                <div class="star star-3"></div>
+                <div class="star star-4"></div>
+                <div class="star star-5"></div>
+                <div class="star star-6"></div>
+                <div class="star star-7"></div>
+                <div class="star star-8"></div>
+                <div class="star star-9"></div>
+                <div class="star star-10"></div>
+            </div>
+            <div class="shooting-star"></div>
+            <div class="nebula"></div>
+            <div class="solar-panel-container">
+                <div class="solar-panel" style="opacity: 0.2;">
+                    <div class="solar-panel-grid"></div>
+                </div>
+            </div>
+        `;
+    container.className = "weather-animation-container night active";
   }
 }
 
@@ -352,21 +446,24 @@ function updateSystemStatus(status) {
   if (systemCard) {
     let gradient = "transparent";
     const weatherBg = document.getElementById("weatherBg");
-    
+
     if (status.status === "offline") {
-      gradient = "linear-gradient(135deg, rgba(231, 76, 60, 0.25), rgba(231, 76, 60, 0.1))";
+      gradient =
+        "linear-gradient(135deg, rgba(231, 76, 60, 0.25), rgba(231, 76, 60, 0.1))";
       if (weatherBg) weatherBg.style.display = "none";
     } else if (status.status === "no_power") {
-      gradient = "linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.15))";
+      gradient =
+        "linear-gradient(135deg, rgba(231, 76, 60, 0.3), rgba(231, 76, 60, 0.15))";
       if (weatherBg) weatherBg.style.display = "none";
     } else if (status.status === "backup") {
-      gradient = "linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(243, 156, 18, 0.1))";
+      gradient =
+        "linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(243, 156, 18, 0.1))";
       if (weatherBg) weatherBg.style.display = "none";
     } else {
       // Normal or solar, show weather animation
       if (weatherBg) weatherBg.style.display = "block";
     }
-    
+
     systemCard.style.background = gradient;
   }
 }
@@ -739,7 +836,11 @@ function initializeSettings() {
   if (notifToggle) {
     notifToggle.addEventListener("change", (e) => {
       localStorage.setItem("notifications", e.target.checked);
-      if (e.target.checked && "Notification" in window && Notification.permission !== "granted") {
+      if (
+        e.target.checked &&
+        "Notification" in window &&
+        Notification.permission !== "granted"
+      ) {
         Notification.requestPermission();
       }
     });

@@ -244,7 +244,7 @@ body {
     z-index: 1;
 }
 
-/* ========== WEATHER ANIMATIONS ========== */
+/* ========== WEATHER ANIMATIONS - COMPLETE ========== */
 .weather-animation-container {
     position: absolute;
     top: 0;
@@ -255,80 +255,501 @@ body {
     pointer-events: none;
     transition: opacity 1s ease;
     opacity: 0;
+    overflow: hidden;
+    border-radius: 24px;
 }
 
 .weather-animation-container.active {
     opacity: 1;
 }
 
-/* Sunny */
+/* ========== SUNNY ANIMATION ========== */
 .weather-animation-container.sunny {
-    background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(80, 227, 194, 0.1) 100%);
+    background: radial-gradient(ellipse at 30% 50%, rgba(255, 200, 50, 0.15), rgba(0, 0, 0, 0));
 }
-.weather-animation-container .sun-anim {
+
+.sun-anim {
+    position: absolute;
+    top: -50px;
+    right: -30px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255, 200, 50, 0.9) 0%, rgba(255, 180, 50, 0.6) 30%, rgba(255, 160, 50, 0) 70%);
+    border-radius: 50%;
+    animation: rotateSun 20s linear infinite;
+    filter: blur(2px);
+}
+
+.sun-anim::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 220, 80, 0.8) 0%, rgba(255, 200, 50, 0.4) 50%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    animation: pulseGlow 3s infinite alternate;
+}
+
+.sun-anim::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255, 220, 80, 0.3), transparent 70%);
+    border-radius: 50%;
+    animation: expandGlow 4s infinite alternate;
+}
+
+/* Sun Rays */
+.sun-ray {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200px;
+    height: 4px;
+    background: linear-gradient(90deg, rgba(255, 220, 80, 0.8), transparent);
+    transform-origin: 0 0;
+    border-radius: 2px;
+    opacity: 0.6;
+}
+
+/* Solar Panels with Sun Rays */
+.solar-panel-container {
+    position: absolute;
+    bottom: 10px;
+    left: 20px;
+    width: 80px;
+    height: 60px;
+    z-index: 2;
+}
+
+.solar-panel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a3a5c, #0d2a4a);
+    border-radius: 4px;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    overflow: hidden;
+}
+
+.solar-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(46, 204, 113, 0.4), transparent);
+    animation: solarGlint 3s infinite;
+}
+
+.solar-panel-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(to right, rgba(46, 204, 113, 0.2) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(46, 204, 113, 0.2) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.ray-falling {
+    position: absolute;
+    top: -50px;
+    left: 30px;
+    width: 2px;
+    height: 80px;
+    background: linear-gradient(to bottom, rgba(255, 220, 80, 0.8), transparent);
+    transform: rotate(15deg);
+    animation: rayFall 1.5s infinite linear;
+}
+
+.ray-falling:nth-child(2) {
+    left: 50px;
+    transform: rotate(25deg);
+    animation-delay: 0.5s;
+    animation-duration: 1.8s;
+}
+
+.ray-falling:nth-child(3) {
+    left: 15px;
+    transform: rotate(5deg);
+    animation-delay: 0.8s;
+    animation-duration: 1.3s;
+}
+
+@keyframes rotateSun {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulseGlow {
+    from { transform: translate(-50%, -50%) scale(0.7); opacity: 0.6; }
+    to { transform: translate(-50%, -50%) scale(0.9); opacity: 1; }
+}
+
+@keyframes expandGlow {
+    from { transform: scale(1); opacity: 0.3; }
+    to { transform: scale(1.3); opacity: 0.6; }
+}
+
+@keyframes solarGlint {
+    from { left: -100%; }
+    to { left: 100%; }
+}
+
+@keyframes rayFall {
+    from { top: -50px; opacity: 0; }
+    to { top: 100px; opacity: 1; }
+}
+
+/* ========== CLOUDY ANIMATION ========== */
+.weather-animation-container.cloudy {
+    background: linear-gradient(135deg, rgba(100, 110, 120, 0.2), rgba(80, 90, 100, 0.1));
+}
+
+.cloud-anim {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 100px;
+    filter: blur(8px);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.cloud-anim-1 {
+    width: 180px;
+    height: 70px;
+    top: 10%;
+    left: -200px;
+    animation: floatCloud 30s linear infinite;
+}
+
+.cloud-anim-1::before,
+.cloud-anim-1::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+}
+
+.cloud-anim-1::before {
+    width: 70px;
+    height: 70px;
+    top: -30px;
+    left: 20px;
+}
+
+.cloud-anim-1::after {
+    width: 90px;
+    height: 90px;
+    top: -40px;
+    left: 60px;
+}
+
+.cloud-anim-2 {
+    width: 140px;
+    height: 55px;
+    top: 50%;
+    left: -180px;
+    animation: floatCloud 22s linear infinite 5s;
+}
+
+.cloud-anim-2::before,
+.cloud-anim-2::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+}
+
+.cloud-anim-2::before {
+    width: 55px;
+    height: 55px;
+    top: -25px;
+    left: 15px;
+}
+
+.cloud-anim-2::after {
+    width: 70px;
+    height: 70px;
+    top: -35px;
+    left: 50px;
+}
+
+.cloud-anim-3 {
+    width: 120px;
+    height: 45px;
+    top: 75%;
+    left: -150px;
+    animation: floatCloud 35s linear infinite 12s;
+}
+
+.cloud-anim-3::before,
+.cloud-anim-3::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.cloud-anim-3::before {
+    width: 45px;
+    height: 45px;
+    top: -20px;
+    left: 12px;
+}
+
+.cloud-anim-3::after {
+    width: 60px;
+    height: 60px;
+    top: -30px;
+    left: 40px;
+}
+
+/* Weak Sun behind clouds */
+.weak-sun {
     position: absolute;
     top: -30px;
     right: 10%;
-    width: 150px;
-    height: 150px;
-    background: radial-gradient(circle, rgba(241, 196, 15, 0.5) 0%, rgba(243, 156, 18, 0) 70%);
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255, 200, 50, 0.4), transparent);
     border-radius: 50%;
-    animation: pulseSun 4s infinite alternate;
-}
-@keyframes pulseSun {
-    0% { transform: scale(1); opacity: 0.6; }
-    100% { transform: scale(1.3); opacity: 1; }
+    animation: weakPulse 4s infinite alternate;
 }
 
-/* Cloudy */
-.weather-animation-container.cloudy {
-    background: linear-gradient(135deg, rgba(142, 158, 171, 0.1) 0%, rgba(238, 242, 243, 0.1) 100%);
+@keyframes weakPulse {
+    from { opacity: 0.2; transform: scale(0.9); }
+    to { opacity: 0.5; transform: scale(1.1); }
 }
-.cloud-anim {
+
+/* Wind animation */
+.wind-line {
     position: absolute;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 50px;
-    filter: blur(2px);
-    animation: floatCloud 20s linear infinite;
-}
-.cloud-anim-1 {
-    width: 150px; height: 50px; top: 10%; left: -200px;
-    animation-duration: 30s;
-}
-.cloud-anim-2 {
-    width: 100px; height: 35px; top: 60%; left: -150px;
-    animation-duration: 22s; animation-delay: 5s;
-}
-@keyframes floatCloud {
-    from { transform: translateX(0); }
-    to { transform: translateX(800px); }
+    height: 2px;
+    background: linear-gradient(90deg, rgba(200, 210, 220, 0.6), transparent);
+    border-radius: 2px;
+    animation: windBlow 4s infinite linear;
 }
 
-/* Night */
-.weather-animation-container.night {
-    background: linear-gradient(135deg, rgba(15, 32, 39, 0.6), rgba(32, 58, 67, 0.6), rgba(44, 83, 100, 0.6));
+.wind-line:nth-child(1) { top: 30%; width: 80px; animation-duration: 3s; }
+.wind-line:nth-child(2) { top: 45%; width: 120px; animation-duration: 4s; animation-delay: 1s; }
+.wind-line:nth-child(3) { top: 60%; width: 60px; animation-duration: 3.5s; animation-delay: 2s; }
+.wind-line:nth-child(4) { top: 75%; width: 100px; animation-duration: 4.5s; animation-delay: 0.5s; }
+
+@keyframes windBlow {
+    from { transform: translateX(-100px); opacity: 0; }
+    to { transform: translateX(500px); opacity: 1; }
 }
+
+@keyframes floatCloud {
+    from { transform: translateX(-200px); }
+    to { transform: translateX(calc(100vw + 200px)); }
+}
+
+/* ========== DARK/THUNDERSTORM ANIMATION ========== */
+.weather-animation-container.dark {
+    background: linear-gradient(135deg, rgba(30, 35, 45, 0.6), rgba(20, 25, 35, 0.4));
+}
+
+.dark-cloud {
+    position: absolute;
+    background: rgba(40, 45, 55, 0.6);
+    border-radius: 100px;
+    filter: blur(12px);
+}
+
+.dark-cloud-1 {
+    width: 200px;
+    height: 80px;
+    top: 5%;
+    left: -100px;
+    animation: slowDrift 25s linear infinite;
+}
+
+.dark-cloud-2 {
+    width: 160px;
+    height: 65px;
+    top: 40%;
+    left: 60%;
+    animation: slowDrift 30s linear infinite 8s;
+}
+
+.dark-cloud-3 {
+    width: 130px;
+    height: 55px;
+    top: 70%;
+    left: -80px;
+    animation: slowDrift 28s linear infinite 3s;
+}
+
+@keyframes slowDrift {
+    from { transform: translateX(-100px); }
+    to { transform: translateX(calc(100vw + 100px)); }
+}
+
+/* Lightning bolt */
+.lightning {
+    position: absolute;
+    top: 20%;
+    right: 30%;
+    color: rgba(255, 220, 100, 0.8);
+    font-size: 40px;
+    text-shadow: 0 0 10px rgba(255, 220, 100, 0.5);
+    animation: lightningFlash 4s infinite;
+    opacity: 0;
+}
+
+.lightning:nth-child(2) {
+    top: 50%;
+    left: 20%;
+    animation-delay: 2.5s;
+    font-size: 30px;
+}
+
+/* Rain drops */
+.rain-drop {
+    position: absolute;
+    width: 2px;
+    height: 15px;
+    background: linear-gradient(to bottom, rgba(100, 150, 200, 0.8), transparent);
+    border-radius: 2px;
+    animation: rainFall 0.8s infinite linear;
+}
+
+.rain-drop:nth-child(3) { left: 10%; animation-duration: 0.6s; animation-delay: 0.2s; }
+.rain-drop:nth-child(4) { left: 25%; animation-duration: 0.7s; animation-delay: 0.5s; }
+.rain-drop:nth-child(5) { left: 40%; animation-duration: 0.55s; animation-delay: 0s; }
+.rain-drop:nth-child(6) { left: 55%; animation-duration: 0.65s; animation-delay: 0.8s; }
+.rain-drop:nth-child(7) { left: 70%; animation-duration: 0.75s; animation-delay: 0.3s; }
+.rain-drop:nth-child(8) { left: 85%; animation-duration: 0.6s; animation-delay: 0.6s; }
+
+@keyframes lightningFlash {
+    0%, 92%, 96%, 100% { opacity: 0; transform: scale(0.8); }
+    93%, 95% { opacity: 1; transform: scale(1); text-shadow: 0 0 20px rgba(255, 220, 100, 0.8); }
+    94% { opacity: 0.5; }
+}
+
+@keyframes rainFall {
+    from { top: -20px; opacity: 0; }
+    to { top: 100%; opacity: 0.8; }
+}
+
+/* ========== NIGHT ANIMATION ========== */
+.weather-animation-container.night {
+    background: linear-gradient(135deg, rgba(10, 20, 35, 0.7), rgba(5, 15, 25, 0.5));
+}
+
+/* Moon */
 .moon-anim {
     position: absolute;
-    top: 15%; right: 10%;
-    width: 60px; height: 60px;
-    background: radial-gradient(circle, rgba(245, 246, 250, 0.8) 0%, rgba(245, 246, 250, 0) 60%);
+    top: 10%;
+    right: 10%;
+    width: 70px;
+    height: 70px;
+    background: radial-gradient(circle at 30% 30%, rgba(255, 245, 220, 0.9), rgba(200, 190, 170, 0.7));
+    border-radius: 50%;
+    box-shadow: 0 0 30px rgba(255, 245, 200, 0.3);
+    animation: moonGlow 6s infinite alternate;
+}
+
+.moon-crater {
+    position: absolute;
+    background: rgba(150, 140, 120, 0.3);
     border-radius: 50%;
 }
-.stars-anim {
-    width: 100%; height: 100%;
-    background-image: 
-        radial-gradient(1.5px 1.5px at 20px 30px, #eee, rgba(0,0,0,0)),
-        radial-gradient(1.5px 1.5px at 40px 70px, #fff, rgba(0,0,0,0)),
-        radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
-        radial-gradient(1.5px 1.5px at 160px 120px, #ddd, rgba(0,0,0,0));
-    background-repeat: repeat;
-    background-size: 200px 200px;
-    animation: twinkle 4s infinite alternate;
+
+.moon-crater-1 { width: 15px; height: 15px; top: 20px; left: 20px; }
+.moon-crater-2 { width: 10px; height: 10px; top: 45px; left: 40px; }
+.moon-crater-3 { width: 8px; height: 8px; top: 35px; left: 55px; }
+
+@keyframes moonGlow {
+    from { box-shadow: 0 0 20px rgba(255, 245, 200, 0.3); transform: scale(1); }
+    to { box-shadow: 0 0 40px rgba(255, 245, 200, 0.6); transform: scale(1.05); }
 }
-@keyframes twinkle {
-    0% { opacity: 0.2; }
-    100% { opacity: 0.8; }
+
+/* Stars */
+.stars-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0;
+    animation: starTwinkle 3s infinite alternate;
+}
+
+.star-1 { width: 2px; height: 2px; top: 15%; left: 20%; animation-duration: 2s; }
+.star-2 { width: 1.5px; height: 1.5px; top: 25%; left: 45%; animation-duration: 3s; animation-delay: 0.5s; }
+.star-3 { width: 2.5px; height: 2.5px; top: 5%; left: 70%; animation-duration: 2.5s; animation-delay: 1s; }
+.star-4 { width: 1.8px; height: 1.8px; top: 35%; left: 85%; animation-duration: 3.5s; animation-delay: 0.2s; }
+.star-5 { width: 2px; height: 2px; top: 50%; left: 15%; animation-duration: 2.8s; animation-delay: 0.8s; }
+.star-6 { width: 1.5px; height: 1.5px; top: 60%; left: 55%; animation-duration: 3.2s; animation-delay: 1.5s; }
+.star-7 { width: 2.2px; height: 2.2px; top: 75%; left: 80%; animation-duration: 2.3s; animation-delay: 0.3s; }
+.star-8 { width: 1.8px; height: 1.8px; top: 85%; left: 30%; animation-duration: 2.7s; animation-delay: 1.2s; }
+.star-9 { width: 2px; height: 2px; top: 45%; left: 65%; animation-duration: 3.1s; animation-delay: 0.7s; }
+.star-10 { width: 1.5px; height: 1.5px; top: 20%; left: 90%; animation-duration: 2.9s; animation-delay: 1.8s; }
+
+@keyframes starTwinkle {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0.3; transform: scale(0.8); }
+}
+
+/* Shooting Star */
+.shooting-star {
+    position: absolute;
+    width: 100px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent);
+    border-radius: 2px;
+    top: 8%;
+    left: -100px;
+    animation: shootingStar 12s infinite linear;
+    opacity: 0;
+}
+
+.shooting-star::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 1), transparent);
+    border-radius: 50%;
+}
+
+@keyframes shootingStar {
+    0% { transform: translateX(0) rotate(25deg); opacity: 0; }
+    5% { opacity: 1; }
+    10% { transform: translateX(800px) rotate(25deg); opacity: 0; }
+    100% { transform: translateX(800px) rotate(25deg); opacity: 0; }
+}
+
+/* Milky Way / Nebula effect */
+.nebula {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: radial-gradient(ellipse at 50% 100%, rgba(80, 60, 120, 0.15), transparent);
+    filter: blur(20px);
+    opacity: 0.5;
 }
 
 .status-icon {
